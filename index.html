@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grain Dégradé — générateur de dégradés maillés granuleux</title>
+<meta name="description" content="Créez des fonds en dégradé maillé granuleux (mesh gradient + grain) dans le navigateur, puis exportez-les en PNG, CSS ou JSON. Libre et gratuit.">
+<meta name="theme-color" content="#121218">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='12' cy='12' r='10' fill='%23ff6a3d'/%3E%3Ccircle cx='21' cy='14' r='9' fill='%237b5cff' opacity='.8'/%3E%3Ccircle cx='15' cy='22' r='8' fill='%231fd1c1' opacity='.8'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <!-- Logo original : trois disques colorés qui se fondent, avec un léger grain -->
+    <svg viewBox="0 0 32 32" width="34" height="34" aria-hidden="true">
+      <defs>
+        <filter id="lb"><feGaussianBlur stdDeviation="1.6"/></filter>
+        <clipPath id="lc"><rect width="32" height="32" rx="8"/></clipPath>
+      </defs>
+      <g clip-path="url(#lc)">
+        <rect width="32" height="32" fill="#1b1730"/>
+        <g filter="url(#lb)">
+          <circle cx="9" cy="10" r="10" fill="#ff6a3d"/>
+          <circle cx="25" cy="11" r="10" fill="#7b5cff"/>
+          <circle cx="17" cy="27" r="10" fill="#1fd1c1"/>
+        </g>
+      </g>
+    </svg>
+    <div>
+      <h1>Grain Dégradé</h1>
+      <p class="tag" data-i18n="tagline">Dégradés maillés granuleux, 100 % dans le navigateur</p>
+    </div>
+  </div>
+  <label class="lang">
+    <span class="sr" data-i18n="language">Langue</span>
+    <select id="lang">
+      <option value="fr">Français</option>
+      <option value="en">English</option>
+      <option value="kab">Taqbaylit</option>
+    </select>
+  </label>
+</header>
+
+<main class="layout">
+  <section class="stage" aria-labelledby="canvasTitle">
+    <h2 id="canvasTitle" class="sr" data-i18n="canvasLabel">Aperçu du dégradé</h2>
+    <div class="toolbar">
+      <button class="btn" id="btnRandom" type="button" data-i18n="random">Palette aléatoire</button>
+      <button class="btn ghost" id="btnReseed" type="button" data-i18n="reseed">Nouvelle graine</button>
+      <label class="inline"><span data-i18n="seed">Graine</span>
+        <input type="number" id="seed" min="0" max="999999999" step="1" inputmode="numeric"></label>
+    </div>
+
+    <div class="canvas-wrap" id="wrap">
+      <div class="frame" id="frame">
+        <canvas id="view" role="img" data-i18n-aria="canvasLabel" aria-label="Aperçu du dégradé"></canvas>
+        <div class="handles" id="handles"></div>
+      </div>
+    </div>
+    <p class="note hint" data-i18n="hint">Glissez les points pour les déplacer</p>
+
+    <div class="row">
+      <label class="inline"><span data-i18n="format">Format</span>
+        <select id="sizePreset">
+          <option value="1080x1080" data-i18n="f_square">Carré 1080 × 1080</option>
+          <option value="1080x1920" data-i18n="f_story">Story 1080 × 1920</option>
+          <option value="2480x3508" data-i18n="f_a4">A4 portrait (2480 × 3508)</option>
+          <option value="1920x1080" data-i18n="f_wide">16:9 — 1920 × 1080</option>
+          <option value="custom" data-i18n="f_custom">Personnalisé</option>
+        </select>
+      </label>
+      <label class="inline"><span data-i18n="width">Largeur</span>
+        <input type="number" id="w" min="64" max="6000" step="1" inputmode="numeric"></label>
+      <label class="inline"><span data-i18n="height">Hauteur</span>
+        <input type="number" id="h" min="64" max="6000" step="1" inputmode="numeric"></label>
+    </div>
+
+    <div class="export">
+      <button class="btn" id="btnPng" type="button" data-i18n="exportPng">Exporter PNG</button>
+      <button class="btn ghost" id="btnCss" type="button" data-i18n="exportCss">Exporter CSS</button>
+      <button class="btn ghost" id="btnJson" type="button" data-i18n="exportJson">Exporter JSON</button>
+      <label class="btn ghost">
+        <input type="file" id="fileJson" accept=".json,application/json" class="sr">
+        <span data-i18n="importJson">Importer JSON</span>
+      </label>
+      <button class="btn ghost" id="btnLink" type="button" data-i18n="copyLink">Copier le lien</button>
+    </div>
+
+    <div class="css-box" id="cssBox" hidden>
+      <div class="css-head">
+        <h3 data-i18n="cssTitle">CSS approché</h3>
+        <label class="inline check"><input type="checkbox" id="cssGrain" checked> <span data-i18n="cssGrain">Inclure le grain (SVG)</span></label>
+      </div>
+      <div class="css-preview grain-degrade" id="cssPreview" aria-hidden="true"></div>
+      <textarea id="cssOut" rows="9" readonly spellcheck="false" data-i18n-aria="cssTitle" aria-label="CSS"></textarea>
+      <div class="row end">
+        <button class="btn" id="btnCopyCss" type="button" data-i18n="copyCss">Copier le CSS</button>
+        <button class="btn ghost" id="btnDlCss" type="button" data-i18n="downloadCss">Télécharger .css</button>
+        <button class="btn ghost" id="btnCloseCss" type="button" data-i18n="close">Fermer</button>
+      </div>
+    </div>
+    <p class="note" data-i18n="privacy">Rien n'est envoyé : tout le rendu se fait sur votre appareil.</p>
+  </section>
+
+  <aside class="panel" data-i18n-aria="settings" aria-label="Réglages">
+    <h2 data-i18n="presets">Préréglages</h2>
+    <div class="presets" id="presets"></div>
+
+    <fieldset>
+      <legend data-i18n="points">Points de couleur</legend>
+      <ol class="plist" id="plist"></ol>
+      <button class="btn ghost full" id="btnAdd" type="button" data-i18n="addPoint">Ajouter un point</button>
+    </fieldset>
+
+    <div id="controls"></div>
+
+    <div class="row end">
+      <button class="btn ghost" id="btnReset" type="button" data-i18n="reset">Réinitialiser</button>
+    </div>
+  </aside>
+</main>
+
+<footer class="foot">
+  <span data-i18n="footer">Logiciel libre sous licence MIT.</span>
+  <a href="https://github.com/salimadour31-boop/grain-degrade" data-i18n="source">Code source</a>
+</footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="gradient.js"></script>
+<script src="i18n.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
